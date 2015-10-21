@@ -13,6 +13,8 @@ DATA_PATH = os.path.expanduser('~/.monstercatconnect/')
 SAVE_FILE = DATA_PATH + "save.tmp"
 COOKIE_FILE = DATA_PATH + "connect.cookies"
 
+TELEGRAM_API_BASE = "https://api.telegram.org/bot"
+
 
 def main():
     create_directories()
@@ -24,6 +26,8 @@ def main():
         print(new_items)
         send_message("There is a new song!")
         write_to_file(SAVE_FILE, new)
+    else:
+        send_message("No new song!")
 
 
 def load_album_list():
@@ -87,7 +91,11 @@ def load_cookies(filename):
 
 
 def send_message(message):
-    # it is planned to support the telegram api
+    requesturl = TELEGRAM_API_BASE + config.telegram['bot_token'] + "/" + "sendMessage"
+    payload = {"chat_id": config.telegram['chat_id'], "text": message}
+
+    response = requests.post(requesturl, data=payload)
+    print(response.text)
     return
 
 if __name__ == '__main__':
