@@ -5,6 +5,7 @@ import requests
 import json
 import config
 import os
+import collections
 import http.cookiejar
 # from time import strftime
 
@@ -37,10 +38,14 @@ def main():
 
 def load_album_list():
     session = requests.Session()
-    session.cookies = load_cookies(COOKIE_FILE)
 
-    # SIGN IN
-    sign_in(session)
+    cj, successful = load_cookies(COOKIE_FILE)
+    session.cookies = cj
+    if not successful:
+        # SIGN IN
+        print("Logging in.")
+        sign_in(session)
+        save_cookies(session.cookies, COOKIE_FILE)
 
     # GET ALBUM LIST
     print("Loading album list...")
@@ -86,17 +91,21 @@ def load_from_file(filename):
         return pickle.load(f)
 
 
-def save_cookies(filename, session):
+def save_cookies_old(filename, session):
     with open(filename, 'w') as f:
         pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), f)
 
 
+def save_cookies(cj, filename):
+    cj.save(filename=filename)
+
+
 def load_cookies(filename):
-    cj = http.cookiejar.FileCookieJar()
+    cj = http.cookiejar.MozillaCookieJar()
     if not os.path.isfile(filename):
-        return cj
+        return cj, False
     cj.load(filename=filename)
-    return cj
+    return cj, True
 
 
 def send_message(message):
