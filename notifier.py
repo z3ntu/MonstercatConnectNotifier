@@ -6,7 +6,7 @@ import json
 import config
 import os
 import http.cookiejar
-from time import strftime
+# from time import strftime
 
 SIGNIN_URL = "https://connect.monstercat.com/signin"
 DATA_PATH = os.path.expanduser('~/.monstercatconnect/')
@@ -19,15 +19,20 @@ TELEGRAM_API_BASE = "https://api.telegram.org/bot"
 def main():
     create_directories()
     new = load_album_list()
-    old = load_from_file(SAVE_FILE)
-    new_items = list(set(new) - set(old))
+    new_ids = get_album_ids(new)
+    old_ids = load_from_file(SAVE_FILE)
+    new_items = list(set(new_ids) - set(old_ids))
     if len(new_items):
         print("NEW ITEMS!!")
         print(new_items)
-        send_message("There is a new song!")
-        write_to_file(SAVE_FILE, new)
+        # send_message("There is a new song!")
+        # write_to_file(SAVE_FILE, new)
+        for album in new:
+            if album.get("_id") in new_items:
+                print(album.get("title", "NO TITLE") + " by " + album.get("renderedArtists", "NO ARTIST") + " [" + album.get("catalogId", "NO ID") + "]")
     else:
-        send_message("No new song!")
+        # send_message("No new song!")
+        print("No new song!")
 
 
 def load_album_list():
@@ -39,11 +44,15 @@ def load_album_list():
 
     # GET ALBUM LIST
     print("Loading album list...")
-    albums_raw = session.get("https://connect.monstercat.com/album")
+    albums_raw = session.get("https://connect.monstercat.com/albums")
     # albums_raw = session.get("http://localhost/connect")
 
     # PARSE RESPONSE INTO JSON
     albums = json.loads(albums_raw.text)
+    return albums
+
+
+def get_album_ids(albums):
     album_ids = []
 
     for album in albums:
