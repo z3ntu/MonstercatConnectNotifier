@@ -15,10 +15,11 @@ SIGNIN_URL = "https://connect.monstercat.com/signin"
 COVER_ART_BASE = "https://connect.monstercat.com/img/labels/monstercat/albums/"
 DATA_PATH = os.path.expanduser('~/.monstercatconnect/')
 TMP_PATH = DATA_PATH + "tmp/"
+IMG_FILE = TMP_PATH + "tmp_pic"
 SAVE_FILE = DATA_PATH + "save.tmp"
 COOKIE_FILE = DATA_PATH + "connect.cookies"
 
-TELEGRAM_API_BASE = "https://api.telegram.org/bot"
+TELEGRAM_API_BASE = "https://api.telegram.org/bot" + config.telegram['bot_token'] + "/"
 
 
 def main():
@@ -27,11 +28,11 @@ def main():
     new_ids = get_album_ids(new)
     old_ids = get_album_ids(load_from_file(SAVE_FILE))
     new_items = list(set(new_ids) - set(old_ids))
-    
+
     # write_to_file(SAVE_FILE, new)
 
     if len(new_items):
-        print("NEW ITEMS!!")
+        print("New items!")
         print(new_items)
 
         for album in new:
@@ -40,19 +41,19 @@ def main():
                                                                           "NO ARTIST") + " [" + album.get("catalogId",
                                                                                                           "NO ID") + "]")
                 cj, successful = load_cookies(COOKIE_FILE)
-                save_picture(COVER_ART_BASE + album.get("coverArt"), TMP_PATH+"tmp_pic", cj)
+                save_picture(COVER_ART_BASE + album.get("coverArt"), IMG_FILE, cj)
 
-                imgtype = imghdr.what(TMP_PATH+"tmp_pic")
+                imgtype = imghdr.what(IMG_FILE)
                 if imgtype is None:
                     print("Not a valid image, skipping!")
                     continue
 
                 new_path = TMP_PATH + "pic" + "." + imgtype
-                os.rename(TMP_PATH+"tmp_pic", new_path)
+                os.rename(IMG_FILE, new_path)
                 print("Moved to " + new_path)
 
-                send_photo(new_path, album.get("title", "NO TITLE") + " by " + album.get("renderedArtists",
-                                                                          "NO ARTIST") + " [" + album.get("catalogId",
+                send_photo(new_path, "\"" + album.get("title", "NO TITLE") + "\" by \"" + album.get("renderedArtists",
+                                                                          "NO ARTIST") + "\" [" + album.get("catalogId",
                                                                                                           "NO ID") + "]")
     else:
         print("No new song!")
@@ -81,7 +82,6 @@ def load_album_list():
 
 def get_album_ids(albums):
     album_ids = []
-
     for album in albums:
         album_ids.append(album.get("_id"))
 
@@ -89,9 +89,13 @@ def get_album_ids(albums):
 
 
 def sign_in(session):
-    payload = {"email": config.connect['email'], "password": config.connect['password']}
     print("Signing in...")
-    session.post(SIGNIN_URL, data=payload)
+    payload = {"email": config.connect['email'], "password": config.connect['password']}
+    response_raw = session.post(SIGNIN_URL, data=payload)
+    response = json.loads(response_raw.text)
+    if len(response) > 0:
+        print("Sign in failed")
+        raise Exception("Sign-In Error: " + response.get("message", "Unknown error"))
 
 
 def create_directories():
@@ -114,16 +118,13 @@ def load_from_file(filename):
         return pickle.load(f)
 
 
-def save_cookies_old(filename, session):
-    with open(filename, 'w') as f:
-        pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), f)
-
-
 def save_cookies(cj, filename):
+    print("Saving cookies")
     cj.save(filename=filename)
 
 
 def load_cookies(filename):
+    print("Loading cookies")
     cj = http.cookiejar.MozillaCookieJar()
     if not os.path.isfile(filename):
         return cj, False
@@ -132,7 +133,8 @@ def load_cookies(filename):
 
 
 def send_message(message):
-    requesturl = TELEGRAM_API_BASE + config.telegram['bot_token'] + "/" + "sendMessage"
+    print("Sending message")
+    requesturl = TELEGRAM_API_BASE + "sendMessage"
     payload = {"chat_id": config.telegram['chat_id'], "text": message}
 
     response = requests.post(requesturl, data=payload)
@@ -141,11 +143,14 @@ def send_message(message):
 
 
 def send_photo(photo_path, caption):
-    print("Sending/uploading photo")
+    print("Sending photo")
     files = {"photo": open(photo_path, "rb")}
     payload = {"chat_id": config.telegram['chat_id'], "caption": caption}
-    response = requests.post(TELEGRAM_API_BASE + config.telegram['bot_token'] + "/" + "sendPhoto", files=files, data=payload)
-    print(response.text)
+    response_raw = requests.post(TELEGRAM_API_BASE + "sendPhoto", files=files, data=payload)
+    response = json.loads(response_raw.text)
+    if not response.get("ok"):
+        raise Exception("Telegram-Error: " + str(response.get("error_code")) + " - " + response.get("description"))
+    print("Send successful")
 
 
 def save_picture(url, path, cj):
