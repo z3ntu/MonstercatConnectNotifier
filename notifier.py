@@ -26,10 +26,10 @@ def main():
     create_directories()
     new = load_album_list()
     new_ids = get_album_ids(new)
-    old_ids = get_album_ids(load_from_file(SAVE_FILE))
+    old_ids = load_from_file(SAVE_FILE)
     new_items = list(set(new_ids) - set(old_ids))
 
-    # write_to_file(SAVE_FILE, new)
+    write_to_file(SAVE_FILE, new_ids)
 
     if len(new_items):
         print("New items!")
