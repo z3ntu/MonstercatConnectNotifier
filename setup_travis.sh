@@ -12,4 +12,4 @@ telegram = dict(
 )
 "
 
-cat $CONTENT > config.py
+echo $CONTENT > config.py
