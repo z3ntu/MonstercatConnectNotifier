@@ -57,7 +57,7 @@ def main():
 
     if len(new_items):
         log("New items!")
-        log(new_items)
+        # log(new_items)
 
         for album in new:
             if album.get("_id") in new_items:
