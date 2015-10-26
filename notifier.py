@@ -8,8 +8,8 @@ import os
 import imghdr
 import urllib.request
 import http.cookiejar
+import sys
 from time import strftime
-
 
 SIGNIN_URL = "https://connect.monstercat.com/signin"
 COVER_ART_BASE = "https://connect.monstercat.com/img/labels/monstercat/albums/"
@@ -25,8 +25,26 @@ TELEGRAM_API_BASE = "https://api.telegram.org/bot" + config.telegram['bot_token'
 LOG = open(LOG_FILE, "a")
 
 
+class Logger(object):
+    def __init__(self):
+        self.terminal = sys.stdout
+        self.log = LOG
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+
+
 def main():
     log("------ BEGIN MONSTERCATCONNECTNOTIFIER ------")
+
+    # based on http://stackoverflow.com/a/616672/3527128
+    sys.stderr = Logger()
+
     create_directories()
     new = load_album_list()
     new_ids = get_album_ids(new)
@@ -39,7 +57,9 @@ def main():
 
         for album in new:
             if album.get("_id") in new_items:
-                log(album.get("title", "NO TITLE") + " by " + album.get("renderedArtists", "NO ARTIST") + " [" + album.get("catalogId", "NO ID") + "]")
+                log(album.get("title", "NO TITLE") + " by " + album.get("renderedArtists",
+                                                                        "NO ARTIST") + " [" + album.get("catalogId",
+                                                                                                        "NO ID") + "]")
                 cj, successful = load_cookies(COOKIE_FILE)
                 save_picture(COVER_ART_BASE + album.get("coverArt"), IMG_FILE, cj)
 
@@ -52,7 +72,9 @@ def main():
                 os.rename(IMG_FILE, new_path)
                 log("Moved to " + new_path)
 
-                send_photo(new_path, "\"" + album.get("title", "NO TITLE") + "\" by \"" + album.get("renderedArtists", "NO ARTIST") + "\" [" + album.get("catalogId", "NO ID") + "]")
+                send_photo(new_path, "\"" + album.get("title", "NO TITLE") + "\" by \"" + album.get("renderedArtists",
+                                                                                                    "NO ARTIST") + "\" [" + album.get(
+                    "catalogId", "NO ID") + "]")
     else:
         log("No new song!")
 
@@ -164,7 +186,8 @@ def save_picture(url, path, cj):
 
 
 def log(message):
-    print("[" + strftime("%Y-%m-%d %H:%M:%S") + "] " + message)
+    if "cron" not in sys.argv:
+        print("[" + strftime("%Y-%m-%d %H:%M:%S") + "] " + message)
     LOG.write("[" + strftime("%Y-%m-%d %H:%M:%S") + "] " + message + "\n")
 
 
