@@ -1,4 +1,5 @@
 language: python
+
 python:
 - '3.2'
 - '3.3'
@@ -6,10 +7,15 @@ python:
 - '3.5'
 - 3.5-dev
 - nightly
+
+install: "pip install -r requirements.txt"
+
 cache:
 - "$HOME/.monstercatconnect"
+
 script:
 - python notifier.py test
+
 env:
   global:
   - secure: FKWjpQ63lLQSoQ6lM41YcYd+gpP9E2OdPDwhLron1SC8I10XIBXoD98Qw7d0mBglk3ZDOHag2v8XCutNPHdZGcfPgE2Q9uRCNjMGnquiLWsb8owsw46C2GH2L6nSCNqUrS+OnYRiLpGbAgIxeBEBArt9Ic6ONpHDl6KdsAMk5OUWNiLRkFFL8hQa+HdRKc26HMP8xUXrRRMd4eZk8SyAPW0GIrnN9eg2rMeangfOsD5D3USuuXwSCHOHUEpHUk96dQs4Qun2hv8ipjjlCZz1z/kD7uQn0/vnXZ+Yeasvofe/yEciw6U7dqHfMzJXHMs1KNBT/oDPHiW5ZV9/EbSUjDQHs064WTceJ5/aTY1Csvq4SS5x/TMrEUSo+3Vy7z/st2sQaaoOfvNIT34p3KVQwdaP3cxHMvv5t6Fes3vF/mXem0geGk6a/ha4SatdTkGci60uojHWOwt9/I1FpsZUj3lxTLHKioBmenTu1USt4P7aVVzpU/CXbfAc8YCTnKHihgUlniTPD2FwiiA4NtdimhjLdYH3I6Rq2n0yw7BDz/KtErQdTU077aiBoisLnVD8YkJ//3Q/ZqgPXAgYvMABHD7XjNWWlNsudF8arbm0Vq6s1fXhc2uC4k66TyQdVvwP1BQxQRTMe+ikh2AXwhjlqOwYz3mQQ213knJ6CqltFAs=
