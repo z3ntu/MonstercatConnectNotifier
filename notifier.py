@@ -156,6 +156,8 @@ def load_cookies(filename):
 
 
 def send_message(message):
+    if "test" in sys.argv:
+        return
     log("Sending message")
     requesturl = TELEGRAM_API_BASE + "sendMessage"
     payload = {"chat_id": config.telegram['chat_id'], "text": message}
@@ -166,6 +168,8 @@ def send_message(message):
 
 
 def send_photo(photo_path, caption):
+    if "test" in sys.argv:
+        return
     log("Sending photo")
     files = {"photo": open(photo_path, "rb")}
     payload = {"chat_id": config.telegram['chat_id'], "caption": caption}
