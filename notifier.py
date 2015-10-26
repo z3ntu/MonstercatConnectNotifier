@@ -153,7 +153,7 @@ def send_photo(photo_path, caption):
 def save_picture(url, path, cj):
     print("Saving picture " + url)
     opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-    r = opener.open(urllib.request.quote(url))
+    r = opener.open(urllib.request.quote(url, safe="%/:=&?~#+!$,;'@()*[]"))
     output = open(path, "wb")
     output.write(r.read())
     output.close()
