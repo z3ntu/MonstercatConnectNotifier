@@ -22,7 +22,8 @@ LOG_FILE = DATA_PATH + "output.log"
 
 TELEGRAM_API_BASE = "https://api.telegram.org/bot" + config.telegram['bot_token'] + "/"
 
-LOG = open(LOG_FILE, "a")
+# temp
+LOG = sys.__stdout__
 
 
 class Logger(object):
@@ -40,12 +41,15 @@ class Logger(object):
 
 
 def main():
+    create_directories()
+    global LOG
+    LOG = open(LOG_FILE, "a")
+
     log("------ BEGIN MONSTERCATCONNECTNOTIFIER ------")
 
     # based on http://stackoverflow.com/a/616672/3527128
     sys.stderr = Logger()
 
-    create_directories()
     new = load_album_list()
     new_ids = get_album_ids(new)
     old_ids = load_from_file(SAVE_FILE)
@@ -122,7 +126,7 @@ def sign_in(session):
 
 
 def create_directories():
-    log("Creating directories...")
+    # log("Creating directories...")
     os.makedirs(DATA_PATH, exist_ok=True)
     os.makedirs(TMP_PATH, exist_ok=True)
 
