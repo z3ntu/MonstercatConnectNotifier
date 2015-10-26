@@ -18,7 +18,7 @@ This depends on the platform you are doing this on (these instructions are for T
 - Click the "create" icon in the search field
 - Choose `New channel` and give it a name
 - Add your bot (use the @username) as an administrator to the channel
-- Copy the channel username into `chat_id` in `config.py` (that it looks like `chat_id="@ConnectNotifier")
+- Copy the channel username into `chat_id` in `config.py` (that it looks like `chat_id="@ConnectNotifier"`)
 
 #### General
 - Enter your Monstercat Connect credentials into `config.py` into their respective places
