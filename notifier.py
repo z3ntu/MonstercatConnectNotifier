@@ -55,10 +55,9 @@ def main():
     old_ids = load_from_file(SAVE_FILE)
     new_items = list(set(new_ids) - set(old_ids))
 
-    if len(new_items):
+    if len(new_items) and not len(new_items) > 20:
         log("New items!")
         # log(new_items)
-
         for album in new:
             if album.get("_id") in new_items:
                 log(album.get("title", "NO TITLE") + " by " + album.get("renderedArtists",
@@ -79,6 +78,8 @@ def main():
                 send_photo(new_path, "\"" + album.get("title", "NO TITLE") + "\" by \"" + album.get("renderedArtists",
                                                                                                     "NO ARTIST") + "\" [" + album.get(
                     "catalogId", "NO ID") + "]")
+    elif len(new_items):
+        log("Too many new items (> 20), skipping them.")
     else:
         log("No new song!")
 
