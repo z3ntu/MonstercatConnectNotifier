@@ -10,8 +10,12 @@ python:
 
 install: "pip install -r requirements.txt"
 
+before_cache:
+- rm -f $HOME/.monstercatconnect/connect.cookies
+
 cache:
-- "$HOME/.monstercatconnect"
+  directories:
+    - $HOME/.monstercatconnect/
 
 script:
 - python setup_travis.py
