@@ -14,6 +14,7 @@ cache:
 - "$HOME/.monstercatconnect"
 
 script:
+- bash setup_travis.sh
 - python notifier.py test
 
 env:
