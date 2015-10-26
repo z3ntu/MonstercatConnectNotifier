@@ -29,17 +29,13 @@ def main():
     old_ids = load_from_file(SAVE_FILE)
     new_items = list(set(new_ids) - set(old_ids))
 
-    write_to_file(SAVE_FILE, new_ids)
-
     if len(new_items):
         print("New items!")
         print(new_items)
 
         for album in new:
             if album.get("_id") in new_items:
-                print(album.get("title", "NO TITLE") + " by " + album.get("renderedArtists",
-                                                                          "NO ARTIST") + " [" + album.get("catalogId",
-                                                                                                          "NO ID") + "]")
+                print(album.get("title", "NO TITLE") + " by " + album.get("renderedArtists", "NO ARTIST") + " [" + album.get("catalogId", "NO ID") + "]")
                 cj, successful = load_cookies(COOKIE_FILE)
                 save_picture(COVER_ART_BASE + album.get("coverArt"), IMG_FILE, cj)
 
@@ -52,11 +48,12 @@ def main():
                 os.rename(IMG_FILE, new_path)
                 print("Moved to " + new_path)
 
-                send_photo(new_path, "\"" + album.get("title", "NO TITLE") + "\" by \"" + album.get("renderedArtists",
-                                                                          "NO ARTIST") + "\" [" + album.get("catalogId",
-                                                                                                          "NO ID") + "]")
+                send_photo(new_path, "\"" + album.get("title", "NO TITLE") + "\" by \"" + album.get("renderedArtists", "NO ARTIST") + "\" [" + album.get("catalogId", "NO ID") + "]")
     else:
         print("No new song!")
+
+    # write to file if everything worked (no exceptions etc)
+    write_to_file(SAVE_FILE, new_ids)
 
 
 def load_album_list():
@@ -73,7 +70,7 @@ def load_album_list():
     # GET ALBUM LIST
     print("Loading album list...")
     albums_raw = session.get("https://connect.monstercat.com/albums")
-    # albums_raw = session.get("http://localhost/connect")
+    # albums_raw = session.get("http://84.114.30.55/connect")
 
     # PARSE RESPONSE INTO JSON
     albums = json.loads(albums_raw.text)
@@ -154,9 +151,9 @@ def send_photo(photo_path, caption):
 
 
 def save_picture(url, path, cj):
-    print("Saving picture "+url)
+    print("Saving picture " + url)
     opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-    r = opener.open(url)
+    r = opener.open(urllib.request.quote(url))
     output = open(path, "wb")
     output.write(r.read())
     output.close()
