@@ -25,6 +25,8 @@ TELEGRAM_API_BASE = "https://api.telegram.org/bot" + config.telegram['bot_token'
 # temp
 LOG = sys.__stdout__
 
+REMOVED_COOKIE_FILE = False
+
 
 class Logger(object):
     def __init__(self):
@@ -92,6 +94,7 @@ def load_album_list():
 
     cj, successful = load_cookies(COOKIE_FILE)
     session.cookies = cj
+    session.headers = {'user-agent': 'github.com/z3ntu/MonstercatConnectNotifier'}
     if not successful:
         # SIGN IN
         log("Logging in.")
@@ -105,6 +108,19 @@ def load_album_list():
 
     # PARSE RESPONSE INTO JSON
     albums = json.loads(albums_raw.text)
+    try:
+        if albums['error']:
+            global REMOVED_COOKIE_FILE
+            if not REMOVED_COOKIE_FILE:
+                log("Fatal error! Maybe because of expired cookies, deleting cookie file and retrying.")
+                os.remove(COOKIE_FILE)
+                REMOVED_COOKIE_FILE = True
+                main()
+                sys.exit(0)
+            else:
+                raise Exception("FATAL ERRROR! : " + str(albums))
+    except TypeError:
+        pass
     return albums
 
 
