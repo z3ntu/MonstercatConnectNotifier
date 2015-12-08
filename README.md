@@ -1,5 +1,10 @@
-# MonstercatConnectNotifier
-[![Build Status](https://travis-ci.org/z3ntu/MonstercatConnectNotifier.svg)](https://travis-ci.org/z3ntu/MonstercatConnectNotifier)
+# MonstercatConnectNotifier [![Build Status](https://travis-ci.org/z3ntu/MonstercatConnectNotifier.svg)](https://travis-ci.org/z3ntu/MonstercatConnectNotifier)
+
+## Screenshot
+![Screenshot from Telegram Desktop](http://i.imgur.com/zTHVQKk.png)
+
+Please note, that I don't have any rights on this image.
+
 ## Requirements
 - Python 3 or newer
 - A Monstercat Connect account ($9.99/Month, get 25% discount with my [referral link](https://connect.monstercat.com/#referral/NJvESmuF46kl
