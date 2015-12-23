@@ -62,10 +62,13 @@ def main():
         # log(new_items)
         for album in new:
             if album.get("_id") in new_items:
-                log(album.get("title", "NO TITLE") + " by " + album.get("renderedArtists",
-                                                                        "NO ARTIST") + " [" + album.get("catalogId",
-                                                                                                        "NO ID") + "]")
+                message = "\"" + album.get("title", "NO TITLE") + "\" by \"" + album.get("renderedArtists",
+                    "NO ARTIST") + "\" [" + album.get("catalogId", "NO ID") + "]"
+                log(message)
                 cj, successful = load_cookies(COOKIE_FILE)
+                if album.get("coverArt") is None:
+                    send_message(message)
+                    continue
                 save_picture(COVER_ART_BASE + album.get("coverArt"), IMG_FILE, cj)
 
                 imgtype = imghdr.what(IMG_FILE)
@@ -77,9 +80,7 @@ def main():
                 os.rename(IMG_FILE, new_path)
                 log("Moved to " + new_path)
 
-                send_photo(new_path, "\"" + album.get("title", "NO TITLE") + "\" by \"" + album.get("renderedArtists",
-                                                                                                    "NO ARTIST") + "\" [" + album.get(
-                    "catalogId", "NO ID") + "]")
+                send_photo(new_path, message)
     elif len(new_items):
         log("Too many new items (> 20), skipping them.")
     else:
