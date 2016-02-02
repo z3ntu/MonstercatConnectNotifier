@@ -7,17 +7,17 @@ import config
 import os
 import imghdr
 import urllib.request
-import http.cookiejar
 import sys
 from time import strftime
 
 SIGNIN_URL = "https://connect.monstercat.com/signin"
-COVER_ART_BASE = "https://connect.monstercat.com/img/labels/monstercat/albums/"
+COVER_ART_BASE = "https://s3.amazonaws.com/data.monstercat.com/blobs/"
+RELEASE_API_URL = "https://connect.monstercat.com/api/release"
+# RELEASE_API_URL = "http://localhost/connect"
 DATA_PATH = os.path.expanduser('~/.monstercatconnect/')
 TMP_PATH = DATA_PATH + "tmp/"
 IMG_FILE = TMP_PATH + "tmp_pic"
-SAVE_FILE = DATA_PATH + "save.tmp"
-COOKIE_FILE = DATA_PATH + "connect.cookies"
+SAVE_FILE = DATA_PATH + "connect.db"
 LOG_FILE = DATA_PATH + "output.log"
 
 TELEGRAM_API_BASE = "https://api.telegram.org/bot" + config.telegram['bot_token'] + "/"
@@ -59,17 +59,17 @@ def main():
 
     if len(new_items) and not len(new_items) > 20:
         log("New items!")
-        # log(new_items)
-        for album in new:
+        for album in new.get("results"):
             if album.get("_id") in new_items:
                 message = "\"" + album.get("title", "NO TITLE") + "\" by \"" + album.get("renderedArtists",
-                    "NO ARTIST") + "\" [" + album.get("catalogId", "NO ID") + "]"
+                                                                                         "NO ARTIST") + "\" [" + album.get(
+                    "catalogId", "NO ID") + "]"
                 log(message)
-                cj, successful = load_cookies(COOKIE_FILE)
-                if album.get("coverArt") is None:
+
+                if album.get("imageHashSum") is None:
                     send_message(message)
                     continue
-                save_picture(COVER_ART_BASE + album.get("coverArt"), IMG_FILE, cj)
+                save_picture(COVER_ART_BASE + album.get("imageHashSum"), IMG_FILE)
 
                 imgtype = imghdr.what(IMG_FILE)
                 if imgtype is None:
@@ -93,58 +93,24 @@ def main():
 def load_album_list():
     session = requests.Session()
 
-    cj, successful = load_cookies(COOKIE_FILE)
-    session.cookies = cj
-    session.headers = {'user-agent': 'github.com/z3ntu/MonstercatConnectNotifier'}
-    if not successful:
-        # SIGN IN
-        log("Logging in.")
-        sign_in(session)
-        save_cookies(session.cookies, COOKIE_FILE)
-
     # GET ALBUM LIST
     log("Loading album list...")
-    albums_raw = session.get("https://connect.monstercat.com/albums")
-    # albums_raw = session.get("http://84.114.30.55/connect")
+    albums_raw = session.get(RELEASE_API_URL)
 
     # PARSE RESPONSE INTO JSON
     albums = json.loads(albums_raw.text)
-    try:
-        if albums['error']:
-            global REMOVED_COOKIE_FILE
-            if not REMOVED_COOKIE_FILE:
-                log("Fatal error! Maybe because of expired cookies, deleting cookie file and retrying.")
-                os.remove(COOKIE_FILE)
-                REMOVED_COOKIE_FILE = True
-                main()
-                sys.exit(0)
-            else:
-                raise Exception("FATAL ERRROR! : " + str(albums))
-    except TypeError:
-        pass
     return albums
 
 
 def get_album_ids(albums):
     album_ids = []
-    for album in albums:
+    for album in albums.get("results"):
         album_ids.append(album.get("_id"))
 
     return album_ids
 
 
-def sign_in(session):
-    log("Signing in...")
-    payload = {"email": config.connect['email'], "password": config.connect['password']}
-    response_raw = session.post(SIGNIN_URL, data=payload)
-    response = json.loads(response_raw.text)
-    if len(response) > 0:
-        log("Sign in failed")
-        raise Exception("Sign-In Error: " + response.get("message", "Unknown error"))
-
-
 def create_directories():
-    # log("Creating directories...")
     os.makedirs(DATA_PATH, exist_ok=True)
     os.makedirs(TMP_PATH, exist_ok=True)
 
@@ -161,20 +127,6 @@ def load_from_file(filename):
         return []
     with open(filename, 'rb') as f:
         return pickle.load(f)
-
-
-def save_cookies(cj, filename):
-    log("Saving cookies")
-    cj.save(filename=filename)
-
-
-def load_cookies(filename):
-    log("Loading cookies")
-    cj = http.cookiejar.MozillaCookieJar()
-    if not os.path.isfile(filename):
-        return cj, False
-    cj.load(filename=filename)
-    return cj, True
 
 
 def send_message(message):
@@ -202,9 +154,9 @@ def send_photo(photo_path, caption):
     log("Send successful")
 
 
-def save_picture(url, path, cj):
+def save_picture(url, path):
     log("Saving picture " + url)
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+    opener = urllib.request.build_opener()
     r = opener.open(urllib.request.quote(url, safe="%/:=&?~#+!$,;'@()*[]"))
     output = open(path, "wb")
     output.write(r.read())
