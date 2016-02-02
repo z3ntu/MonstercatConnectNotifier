@@ -7,8 +7,6 @@ Please note, that I don't have any rights on this image.
 
 ## Requirements
 - Python 3 or newer
-- A Monstercat Connect account ($9.99/Month, get 25% discount with my [referral link](https://connect.monstercat.com/#referral/NJvESmuF46kl
-))
 - A Telegram account
 
 ## Setup
@@ -26,5 +24,4 @@ This depends on the platform you are doing this on (these instructions are for T
 - Copy the channel username into `chat_id` in `config.py` (that it looks like `chat_id="@ConnectNotifier"`)
 
 #### General
-- Enter your Monstercat Connect credentials into `config.py` into their respective places
 - Start `notifier.py`
