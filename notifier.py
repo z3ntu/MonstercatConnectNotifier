@@ -12,7 +12,7 @@ from time import strftime
 
 SIGNIN_URL = "https://connect.monstercat.com/signin"
 COVER_ART_BASE = "https://s3.amazonaws.com/data.monstercat.com/blobs/"
-RELEASE_API_URL = "https://connect.monstercat.com/api/release"
+RELEASE_API_URL = "https://connect.monstercat.com/api/catalog/release"
 # RELEASE_API_URL = "http://localhost/connect"
 DATA_PATH = os.path.expanduser('~/.monstercatconnect/')
 TMP_PATH = DATA_PATH + "tmp/"
