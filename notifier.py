@@ -9,6 +9,7 @@ import imghdr
 import urllib.request
 import sys
 from time import strftime
+from pprint import pprint
 
 SIGNIN_URL = "https://connect.monstercat.com/signin"
 COVER_ART_BASE = "https://s3.amazonaws.com/data.monstercat.com/blobs/"
@@ -96,6 +97,11 @@ def load_album_list():
     # GET ALBUM LIST
     log("Loading album list...")
     albums_raw = session.get(RELEASE_API_URL)
+
+    # Sometimes the response is empty?
+    if albums_raw.text is None:
+        pprint(vars(albums_raw))
+        raise Exception("albums_raw.text is None!")
 
     # PARSE RESPONSE INTO JSON
     albums = json.loads(albums_raw.text)
