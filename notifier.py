@@ -65,7 +65,7 @@ def main():
                 message = "\"" + album.get("title", "NO TITLE") + "\" by \"" + album.get("renderedArtists",
                                                                                          "NO ARTIST") + "\" [" + album.get(
                     "catalogId", "NO ID") + "]"
-                log(message)
+                log(message + " (" + album.get("_id") + ")")
 
                 if album.get("imageHashSum") is None:
                     send_message(message)
@@ -142,8 +142,9 @@ def send_message(message):
     requesturl = TELEGRAM_API_BASE + "sendMessage"
     payload = {"chat_id": config.telegram['chat_id'], "text": message}
 
-    response = requests.post(requesturl, data=payload)
-    log(response.text)
+    # response = \
+    requests.post(requesturl, data=payload)
+    # log(response.text)
     return
 
 
