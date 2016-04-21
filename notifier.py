@@ -99,9 +99,9 @@ def load_album_list():
     albums_raw = session.get(RELEASE_API_URL)
 
     # Sometimes the response is empty?
-    if albums_raw.text is None:
+    if albums_raw is None or albums_raw.text is None:
         pprint(vars(albums_raw))
-        raise Exception("albums_raw.text is None!")
+        raise Exception("albums_raw or albums_raw.text is None!")
 
     # PARSE RESPONSE INTO JSON
     albums = json.loads(albums_raw.text)
