@@ -81,7 +81,7 @@ def main():
                 os.rename(IMG_FILE, new_path)
                 log("Moved to " + new_path)
 
-                if os.path.getsize(new_path) > 10000000  # if the pic is larger than 10 MB
+                if os.path.getsize(new_path) > 10000000:  # if the pic is larger than 10 MB
                     send_message(message)  # just send a message not the pic
                     continue
 
