@@ -1,0 +1,7 @@
+[Unit]
+Description=MonstercatConnectNotifier
+#OnFailure=failure-email@.service
+
+[Service]
+Type=simple
+ExecStart=/home/luca/Dev/MonstercatConnectNotifier/notifier.py cron

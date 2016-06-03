@@ -14,7 +14,7 @@ from pprint import pprint
 SIGNIN_URL = "https://connect.monstercat.com/signin"
 COVER_ART_BASE = "https://s3.amazonaws.com/data.monstercat.com/blobs/"
 RELEASE_API_URL = "https://connect.monstercat.com/api/catalog/release"
-# RELEASE_API_URL = "http://localhost/connect"
+# RELEASE_API_URL = "http://localhost/release"
 DATA_PATH = os.path.expanduser('~/.monstercatconnect/')
 TMP_PATH = DATA_PATH + "tmp/"
 IMG_FILE = TMP_PATH + "tmp_pic"
@@ -80,6 +80,10 @@ def main():
                 new_path = TMP_PATH + "pic" + "." + imgtype
                 os.rename(IMG_FILE, new_path)
                 log("Moved to " + new_path)
+
+                if os.path.getsize(new_path) > 10000000  # if the pic is larger than 10 MB
+                    send_message(message)  # just send a message not the pic
+                    continue
 
                 send_photo(new_path, message)
     elif len(new_items):
