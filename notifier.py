@@ -7,9 +7,9 @@ import os
 import imghdr
 import urllib.request
 import sys
-from config import telegram
 from time import strftime
 from pprint import pprint
+from config import telegram
 
 SIGNIN_URL = "https://connect.monstercat.com/signin"
 RELEASE_API_URL = "https://connect.monstercat.com/api/catalog/release"
