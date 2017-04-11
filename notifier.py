@@ -3,16 +3,15 @@
 import pickle
 import requests
 import json
-import config
 import os
 import imghdr
 import urllib.request
 import sys
+from config import telegram
 from time import strftime
 from pprint import pprint
 
 SIGNIN_URL = "https://connect.monstercat.com/signin"
-COVER_ART_BASE = "https://s3.amazonaws.com/data.monstercat.com/blobs/"
 RELEASE_API_URL = "https://connect.monstercat.com/api/catalog/release"
 # RELEASE_API_URL = "http://localhost/release"
 DATA_PATH = os.path.expanduser('~/.monstercatconnect/')
@@ -21,7 +20,7 @@ IMG_FILE = TMP_PATH + "tmp_pic"
 SAVE_FILE = DATA_PATH + "connect.db"
 LOG_FILE = DATA_PATH + "output.log"
 
-TELEGRAM_API_BASE = "https://api.telegram.org/bot" + config.telegram['bot_token'] + "/"
+TELEGRAM_API_BASE = "https://api.telegram.org/bot" + telegram['bot_token'] + "/"
 
 # temp
 LOG = sys.__stdout__
@@ -62,15 +61,15 @@ def main():
         log("New items!")
         for album in new.get("results"):
             if album.get("_id") in new_items:
-                message = "\"" + album.get("title", "NO TITLE") + "\" by \"" + album.get("renderedArtists",
-                                                                                         "NO ARTIST") + "\" [" + album.get(
-                    "catalogId", "NO ID") + "]"
+                message = "\"" + album.get("title", "NO TITLE") + \
+                          "\" by \"" + album.get("renderedArtists", "NO ARTIST") + \
+                          "\" [" + album.get("catalogId", "NO ID") + "]"
                 log(message + " (" + album.get("_id") + ")")
 
-                if album.get("imageHashSum") is None:
+                if not album.get("coverUrl"):
                     send_message(message)
                     continue
-                save_picture(COVER_ART_BASE + album.get("imageHashSum"), IMG_FILE)
+                save_picture(album.get("coverUrl"), IMG_FILE)
 
                 imgtype = imghdr.what(IMG_FILE)
                 if imgtype is None:
@@ -144,7 +143,7 @@ def send_message(message):
         return
     log("Sending message")
     requesturl = TELEGRAM_API_BASE + "sendMessage"
-    payload = {"chat_id": config.telegram['chat_id'], "text": message}
+    payload = {"chat_id": telegram['chat_id'], "text": message}
 
     # response = \
     requests.post(requesturl, data=payload)
@@ -157,7 +156,7 @@ def send_photo(photo_path, caption):
         return
     log("Sending photo")
     files = {"photo": open(photo_path, "rb")}
-    payload = {"chat_id": config.telegram['chat_id'], "caption": caption}
+    payload = {"chat_id": telegram['chat_id'], "caption": caption}
     response_raw = requests.post(TELEGRAM_API_BASE + "sendPhoto", files=files, data=payload)
     response = json.loads(response_raw.text)
     if not response.get("ok"):
