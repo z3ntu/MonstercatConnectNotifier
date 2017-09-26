@@ -67,6 +67,7 @@ def main():
                 log(message + " (" + album.get("_id") + ")")
 
                 if not album.get("coverUrl"):
+                    log("coverUrl not found - just sending the message.")
                     send_message(message)
                     continue
                 save_picture(album.get("coverUrl"), IMG_FILE)
@@ -81,10 +82,19 @@ def main():
                 log("Moved to " + new_path)
 
                 if os.path.getsize(new_path) > 10000000:  # if the pic is larger than 10 MB
-                    send_message(message)  # just send a message not the pic
-                    continue
+                    log("Image is bigger than 10MB - size is: " + str(os.path.getsize(new_path)))
 
-                send_photo(new_path, message)
+                    if os.path.getsize(new_path) > 50000000:  # if the pic is larger than 50 MB
+                        log("Sending as message (>50MB).")
+                        send_message(message)  # just send a message not the pic
+                    else:
+                        log("Sending as document (10MB-50MB).")
+                        send_document(new_path, message)
+
+                else:
+                    # Send as photo if under 10MB
+                    send_photo(new_path, message)
+
     elif len(new_items):
         log("Too many new items (> 20), skipping them.")
     else:
@@ -158,6 +168,19 @@ def send_photo(photo_path, caption):
     files = {"photo": open(photo_path, "rb")}
     payload = {"chat_id": telegram['chat_id'], "caption": caption}
     response_raw = requests.post(TELEGRAM_API_BASE + "sendPhoto", files=files, data=payload)
+    response = json.loads(response_raw.text)
+    if not response.get("ok"):
+        raise Exception("Telegram-Error: " + str(response.get("error_code")) + " - " + response.get("description"))
+    log("Send successful")
+
+
+def send_document(document_path, caption):
+    if "test" in sys.argv:
+        return
+    log("Sending document")
+    files = {"document": open(document_path, "rb")}
+    payload = {"chat_id": telegram['chat_id'], "caption": caption}
+    response_raw = requests.post(TELEGRAM_API_BASE + "sendDocument", files=files, data=payload)
     response = json.loads(response_raw.text)
     if not response.get("ok"):
         raise Exception("Telegram-Error: " + str(response.get("error_code")) + " - " + response.get("description"))
