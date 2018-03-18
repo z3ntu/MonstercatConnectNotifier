@@ -190,6 +190,7 @@ def send_document(document_path, caption):
 def save_picture(url, path):
     log("Saving picture " + url)
     opener = urllib.request.build_opener()
+    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
     r = opener.open(urllib.request.quote(url, safe="%/:=&?~#+!$,;'@()*[]"))
     output = open(path, "wb")
     output.write(r.read())
