@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import imghdr
 import json
 import os
 import pickle
@@ -13,9 +12,10 @@ import requests
 
 from config import telegram
 
-SIGNIN_URL = "https://connect.monstercat.com/signin"
-RELEASE_API_URL = "https://connect.monstercat.com/api/catalog/release"
-# RELEASE_API_URL = "http://localhost/release"
+API_PREFIX = "https://connect.monstercat.com/v2"
+RELEASE_API_URL = API_PREFIX + "/catalog/browse"
+# RELEASE_API_URL = "http://localhost:8080/browse"
+COVER_URL = API_PREFIX + "/release/{}/cover?image_width=2048"
 DATA_PATH = os.path.expanduser('~/.monstercatconnect/')
 TMP_PATH = DATA_PATH + "tmp/"
 IMG_FILE = TMP_PATH + "tmp_pic"
@@ -61,25 +61,26 @@ def main():
 
     if len(new_items) and not len(new_items) > 20:
         log("New items!")
-        for album in new.get("results"):
-            if album.get("_id") in new_items:
-                message = "\"" + album.get("title", "NO TITLE") + \
-                          "\" by \"" + album.get("renderedArtists", "NO ARTIST") + \
-                          "\" [" + album.get("catalogId", "NO ID") + "]"
-                log(message + " (" + album.get("_id") + ")")
+        for result in new.get("results"):
+            if result.get("id") in new_items:
+                release = result.get("release")
+                message = "\"" + release.get("title", "NO TITLE") + \
+                          "\" by \"" + release.get("artistsTitle", "NO ARTIST") + \
+                          "\" [" + release.get("catalogId", "NO ID") + "]"
+                log(message + " (" + result.get("id") + ")")
 
-                if not album.get("coverUrl"):
-                    log("coverUrl not found - just sending the message.")
+                cover_url = COVER_URL.format(release.get("id"))
+                save_picture(cover_url, IMG_FILE)
+
+                # FIXME imghdr doesn't detect jpeg with ffd8ffdb header
+                # imgtype = imghdr.what(IMG_FILE)
+                imgtype = "jpeg"
+                if imgtype is None:
+                    log("Not a valid image - just sending the message.")
                     send_message(message)
                     continue
-                save_picture(album.get("coverUrl"), IMG_FILE)
 
-                imgtype = imghdr.what(IMG_FILE)
-                if imgtype is None:
-                    log("Not a valid image, skipping!")
-                    continue
-
-                new_path = TMP_PATH + "pic" + "." + imgtype
+                new_path = TMP_PATH + release.get("catalogId", "pic") + "." + imgtype
                 os.rename(IMG_FILE, new_path)
                 log("Moved to " + new_path)
 
@@ -126,7 +127,7 @@ def load_album_list():
 def get_album_ids(albums):
     album_ids = []
     for album in albums.get("results"):
-        album_ids.append(album.get("_id"))
+        album_ids.append(album.get("id"))
 
     return album_ids
 
