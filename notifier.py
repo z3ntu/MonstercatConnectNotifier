@@ -156,7 +156,7 @@ def send_message(message):
         return
     log("Sending message")
     requesturl = TELEGRAM_API_BASE + "sendMessage"
-    payload = {"chat_id": telegram['chat_id'], "text": message}
+    payload = {"chat_id": telegram['chat_id'], "text": message, "disable_notification": telegram['silent']}
 
     # response = \
     requests.post(requesturl, data=payload)
@@ -169,7 +169,7 @@ def send_photo(photo_path, caption):
         return
     log("Sending photo")
     files = {"photo": open(photo_path, "rb")}
-    payload = {"chat_id": telegram['chat_id'], "caption": caption}
+    payload = {"chat_id": telegram['chat_id'], "caption": caption, "disable_notification": telegram['silent']}
     response_raw = requests.post(TELEGRAM_API_BASE + "sendPhoto", files=files, data=payload)
     response = json.loads(response_raw.text)
     if not response.get("ok"):
@@ -182,7 +182,7 @@ def send_document(document_path, caption):
         return
     log("Sending document")
     files = {"document": open(document_path, "rb")}
-    payload = {"chat_id": telegram['chat_id'], "caption": caption}
+    payload = {"chat_id": telegram['chat_id'], "caption": caption, "disable_notification": telegram['silent']}
     response_raw = requests.post(TELEGRAM_API_BASE + "sendDocument", files=files, data=payload)
     response = json.loads(response_raw.text)
     if not response.get("ok"):

@@ -1,4 +1,5 @@
 telegram = dict(
     bot_token="",
-    chat_id=""
+    chat_id="",
+    silent=False
 )
