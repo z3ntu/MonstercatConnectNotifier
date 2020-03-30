@@ -1,14 +1,16 @@
 #!/usr/bin/python3
 
-import pickle
-import requests
+import imghdr
 import json
 import os
-import imghdr
-import urllib.request
+import pickle
 import sys
-from time import strftime
+import urllib.request
 from pprint import pprint
+from time import strftime
+
+import requests
+
 from config import telegram
 
 SIGNIN_URL = "https://connect.monstercat.com/signin"
