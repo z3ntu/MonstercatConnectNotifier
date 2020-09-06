@@ -7,6 +7,7 @@ import sys
 import urllib.request
 from pprint import pprint
 from time import strftime
+from typing import Set, List
 
 import requests
 
@@ -57,46 +58,44 @@ def main():
     new = load_album_list()
     new_ids = get_album_ids(new)
     old_ids = load_from_file(SAVE_FILE)
-    new_items = list(set(new_ids) - set(old_ids))
+    new_items: List[str] = list(set(new_ids) - set(old_ids))
+
+    sent_release_ids: Set[str] = set()
 
     if len(new_items) and not len(new_items) > 20:
         log("New items!")
         for result in new.get("results"):
-            if result.get("id") in new_items:
-                release = result.get("release")
+            release = result.get("release")
+            release_id: str = release.get("id")
+            if release_id in new_items \
+                    and release_id not in sent_release_ids:
                 message = "\"" + release.get("title", "NO TITLE") + \
                           "\" by \"" + release.get("artistsTitle", "NO ARTIST") + \
                           "\" [" + release.get("catalogId", "NO ID") + "]"
-                log(message + " (" + result.get("id") + ")")
+                log(message + " (" + release_id + ")")
 
-                cover_url = COVER_URL.format(release.get("id"))
-                save_picture(cover_url, IMG_FILE)
+                cover_url = COVER_URL.format(release_id)
+                image_path = TMP_PATH + release.get("catalogId", "pic") + ".jpeg"
+                save_picture(cover_url, image_path)
 
-                # FIXME imghdr doesn't detect jpeg with ffd8ffdb header
-                # imgtype = imghdr.what(IMG_FILE)
-                imgtype = "jpeg"
-                if imgtype is None:
-                    log("Not a valid image - just sending the message.")
-                    send_message(message)
-                    continue
+                if os.path.getsize(image_path) > 10000000:  # if the pic is larger than 10 MB
+                    log("Image is bigger than 10MB - size is: " + str(os.path.getsize(image_path)))
 
-                new_path = TMP_PATH + release.get("catalogId", "pic") + "." + imgtype
-                os.rename(IMG_FILE, new_path)
-                log("Moved to " + new_path)
-
-                if os.path.getsize(new_path) > 10000000:  # if the pic is larger than 10 MB
-                    log("Image is bigger than 10MB - size is: " + str(os.path.getsize(new_path)))
-
-                    if os.path.getsize(new_path) > 50000000:  # if the pic is larger than 50 MB
+                    if os.path.getsize(image_path) > 50000000:  # if the pic is larger than 50 MB
                         log("Sending as message (>50MB).")
                         send_message(message)  # just send a message not the pic
                     else:
                         log("Sending as document (10MB-50MB).")
-                        send_document(new_path, message)
+                        send_document(image_path, message)
 
                 else:
                     # Send as photo if under 10MB
-                    send_photo(new_path, message)
+                    send_photo(image_path, message)
+
+                # Finally delete the image
+                os.remove(image_path)
+
+                sent_release_ids.add(release_id)
 
     elif len(new_items):
         log("Too many new items (> 20), skipping them.")
@@ -127,7 +126,7 @@ def load_album_list():
 def get_album_ids(albums):
     album_ids = []
     for album in albums.get("results"):
-        album_ids.append(album.get("id"))
+        album_ids.append(album.get("release").get("id"))
 
     return album_ids
 
@@ -191,7 +190,7 @@ def send_document(document_path, caption):
 
 
 def save_picture(url, path):
-    log("Saving picture " + url)
+    log("Saving picture " + url + " to " + path)
     opener = urllib.request.build_opener()
     opener.addheaders = [('User-agent', 'Mozilla/5.0')]
     r = opener.open(urllib.request.quote(url, safe="%/:=&?~#+!$,;'@()*[]"))
