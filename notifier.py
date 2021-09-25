@@ -13,10 +13,10 @@ import requests
 
 from config import telegram
 
-API_PREFIX = "https://connect.monstercat.com/v2"
-RELEASE_API_URL = API_PREFIX + "/catalog/browse"
+API_PREFIX = "https://monstercat.com"
+RELEASE_API_URL = API_PREFIX + "/api/catalog/browse"
 # RELEASE_API_URL = "http://localhost:8080/browse"
-COVER_URL = API_PREFIX + "/release/{}/cover?image_width=2048"
+COVER_URL = API_PREFIX + "/release/{}/cover?width=2048"
 DATA_PATH = os.path.expanduser('~/.monstercatconnect/')
 TMP_PATH = DATA_PATH + "tmp/"
 IMG_FILE = TMP_PATH + "tmp_pic"
@@ -64,18 +64,18 @@ def main():
 
     if len(new_items) and not len(new_items) > 20:
         log("New items!")
-        for result in new.get("results"):
-            release = result.get("release")
-            release_id: str = release.get("id")
+        for result in new.get("Data"):
+            release = result.get("Release")
+            release_id: str = release.get("Id")
             if release_id in new_items \
                     and release_id not in sent_release_ids:
-                message = "\"" + release.get("title", "NO TITLE") + \
-                          "\" by \"" + release.get("artistsTitle", "NO ARTIST") + \
-                          "\" [" + release.get("catalogId", "NO ID") + "]"
+                message = "\"" + release.get("Title", "NO TITLE") + \
+                          "\" by \"" + release.get("ArtistsTitle", "NO ARTIST") + \
+                          "\" [" + release.get("CatalogId", "NO ID") + "]"
                 log(message + " (" + release_id + ")")
 
-                cover_url = COVER_URL.format(release_id)
-                image_path = TMP_PATH + release.get("catalogId", "pic") + ".jpeg"
+                cover_url = COVER_URL.format(release.get("CatalogId"))
+                image_path = TMP_PATH + release.get("CatalogId", "pic") + ".jpeg"
                 save_picture(cover_url, image_path)
 
                 if os.path.getsize(image_path) > 10000000:  # if the pic is larger than 10 MB
@@ -125,8 +125,8 @@ def load_album_list():
 
 def get_album_ids(albums):
     album_ids = []
-    for album in albums.get("results"):
-        album_ids.append(album.get("release").get("id"))
+    for album in albums.get("Data"):
+        album_ids.append(album.get("Release").get("Id"))
 
     return album_ids
 
@@ -189,11 +189,25 @@ def send_document(document_path, caption):
     log("Send successful")
 
 
+def urllib_open_redirect(opener, url):
+    try:
+        return opener.open(url)
+    except urllib.error.HTTPError as ex:
+        # 308 (Permanent Redirect) is not supported by current python version
+        # See https://bugs.python.org/issue40321
+        # Can be removed once this is fixed.
+        if ex.code == 308:
+            url = ex.headers.get("Location")
+            return opener.open(url)
+        else:
+            raise
+
+
 def save_picture(url, path):
     log("Saving picture " + url + " to " + path)
     opener = urllib.request.build_opener()
     opener.addheaders = [('User-agent', 'Mozilla/5.0')]
-    r = opener.open(urllib.request.quote(url, safe="%/:=&?~#+!$,;'@()*[]"))
+    r = urllib_open_redirect(opener, urllib.request.quote(url, safe="%/:=&?~#+!$,;'@()*[]"))
     output = open(path, "wb")
     output.write(r.read())
     output.close()
