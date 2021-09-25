@@ -103,7 +103,8 @@ def main():
         log("No new song!")
 
     # write to file if everything worked (no exceptions etc)
-    write_to_file(SAVE_FILE, new_ids)
+    persist_ids = list(set(new_ids + old_ids))
+    write_to_file(SAVE_FILE, persist_ids)
 
 
 def load_album_list():
